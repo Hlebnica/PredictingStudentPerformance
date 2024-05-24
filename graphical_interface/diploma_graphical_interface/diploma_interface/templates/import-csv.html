@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <head>
+    <title>Извлечение данных из файлов</title>
+  </head>
+  <h2 class="display-6">Извлечение данных из файлов</h2>
+  <div class="form-control">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="row">
+        <div class="col-6">
+          <div>
+            <div>
+                <h4>Высшая школа загружаемых файлов</h4>
+                <select class="form-select" style="width: auto; max-width: 100%;" id="institutes_list_item" name="institutes_list_item">
+                  {% for institute in institutes_list %}
+                      <option {% if institutes_list_item == institute %}selected{% endif %}>{{ institute }}</option>
+                  {% endfor %}
+                </select>
+            </div> 
+          </div>
+
+          <div>
+            <label>Журнал по годам</label>
+            <input class="form-control" type="file" name="file_dfYear" id="file_dfYear" accept=".csv" required>
+          </div>
+
+          <div>
+            <label>Информация о студентах</label>
+            <input class="form-control" type="file" name="file_dfStudents" id="file_dfStudents" accept=".csv" required>
+          </div>
+
+          <div>
+            <label>Рейтинг студентов по предметам</label>
+            <input class="form-control" type="file" name="file_dfRating" id="file_dfRating" accept=".csv" required>
+          </div>
+
+          <div>
+            <label>Результаты ЕГЭ студентов</label>
+            <input class="form-control" type="file" name="file_dfEge" id="file_dfEge" accept=".csv" required> 
+          </div>
+          
+          <div> 
+            <button class="btn btn-primary" type="submit">Загрузить файлы</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <br>
+
+  {% if df_year_now_html %}
+    <h3>Журнал за {{ year }} учебный год (количество строк - {{ df_year_size }})</h3>
+    <div class="scrollable fixed-header-table">
+        {{ df_year_now_html | safe }}
+    </div>
+
+    <div>
+        <h3>Информация о студентах за {{ year }} учебный год (количество строк - {{ df_students_by_journal_size }})</h3>
+        <div class="scrollable fixed-header-table">
+            {{ df_students_by_journal_id_html | safe }} 
+        </div>
+    </div>
+
+    <div>
+        <h3>Рейтинг студентов по предметам за {{ year }} учебный год (количество строк - {{ df_rating_by_journal_size }})</h3>
+        <div class="scrollable fixed-header-table">
+            {{ df_rating_by_journal_id_html | safe }}
+        </div>
+    </div>
+
+    <div>
+        <h3>Результаты ЕГЭ студентов за {{ year }} учебный год (количество строк - {{ df_ege_by_students_size }})</h3>
+        <div class="scrollable fixed-header-table">
+            {{ df_ege_by_students_id_html | safe }}
+        </div>
+    </div>
+  {% endif %}
+
+
+
+{% endblock %}

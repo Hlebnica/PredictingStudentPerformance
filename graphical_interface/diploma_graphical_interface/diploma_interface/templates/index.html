@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <head>
+    <title>Извлечение данных из «Электронного ЮУрГУ»</title>
+  </head>
+  <h2 class="display-6">Извлечение данных из «Электронного ЮУрГУ»</h2>
+  <div class="form-control">
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="row">
+        <div class="col-2">
+            <div> 
+                <h3>Диапазон годов</h3>
+                <label>От</label>
+                <input class="form-control" style="width: auto;" type="number" min="2019" max="2022" name="year_from" value="{{ year_from | default:2019  }}" required /> 
+                <label>До</label>
+                <input class="form-control" style="width: auto;" type="number" min="2019" max="2023" name="year_to" value="{{ year_to | default:2019  }}" required /> 
+            </div>
+        </div>
+
+        <div class="col-3">
+            <div> 
+                <h3>Диапазон учебных курсов</h3>
+                <label>От</label>
+                <input class="form-control" style="width: auto;" type="number" min="1" max="4" name="range_from" value="{{ range_from | default:1  }}" required /> 
+                <label>До</label>
+                <input class="form-control" style="width: auto;" type="number" min="1" max="4" name="range_to" value="{{ range_to | default:1  }}" required /> 
+            </div>
+        </div>
+
+        <div class="col-6">
+          <div>
+              <h3>Высшая школа</h3>
+              <select class="form-select" style="width: auto; max-width: 100%;" id="institutes_list_item" name="institutes_list_item">
+                {% for institute in institutes_list %}
+                    <option {% if institutes_list_item == institute %}selected{% endif %}>{{ institute }}</option>
+                {% endfor %}
+              </select>
+          </div> 
+        </div>
+      </div>
+
+      <div> 
+        <button class="btn btn-primary" type="submit">Сделать запрос</button>
+      </div>
+
+    </form>
+  </div>
+  
+  {% if df_year_now_html %}
+      <div class="form-control">
+        <div>
+          <a href="data:text/csv;charset=utf-8,{{ dfByYear_csv }}" download="Журнал за {{ year_from }}-{{ year_to }} {{ institutes_list_item }}.csv">Скачать Журнал за {{ year_from }}-{{ year_to }} год</a>
+          <br>
+          <a href="data:text/csv;charset=utf-8,{{ dfStudentsByJournalId_csv }}" download="Информация о студентах за {{ year_from }}-{{ year_to }} {{ institutes_list_item }}.csv">Скачать Информацию о студентах за {{ year_from }}-{{ year_to }} год</a>
+          <br>
+          <a href="data:text/csv;charset=utf-8,{{ dfRatingByJournalId_csv }}" download="Рейтинг студентов по предметам за {{ year_from }}-{{ year_to }} {{ institutes_list_item }}.csv">Скачать Рейтинг студентов по предметам за {{ year_from }}-{{ year_to }} год</a>
+          <br>
+          <a href="data:text/csv;charset=utf-8,{{ dfEgeMarksByStudentsId_csv }}" download="Результаты ЕГЭ студентов за {{ year_from }}-{{ year_to }} {{ institutes_list_item }}.csv">Скачать Результаты ЕГЭ студентов за {{ year_from }}-{{ year_to }} год</a>
+          <br>
+        </div>
+        <br>
+        <h3>Журнал за {{ year_from }}-{{ year_to }} учебный год (количество строк - {{ df_year_size }})</h3>
+        <div class="scrollable fixed-header-table">
+          {{ df_year_now_html | safe }}
+        </div>
+
+        <h3>Информация о студентах за {{ year_from }}-{{ year_to }} учебный год (количество строк - {{ df_students_by_journal_size }})</h3>
+        <div class="scrollable fixed-header-table">
+          {{ df_students_by_journal_id_html | safe }} 
+        </div>
+
+        <h3>Рейтинг студентов по предметам за {{ year_from }}-{{ year_to }} учебный год (количество строк - {{ df_rating_by_journal_size }})</h3>
+        <div class="scrollable fixed-header-table">
+          {{ df_rating_by_journal_id_html | safe }}
+        </div>
+
+        <h3>Результаты ЕГЭ студентов за {{ year_from }}-{{ year_to }} учебный год (количество строк - {{ df_ege_by_students_size }})</h3>
+        <div class="scrollable fixed-header-table">
+          {{ df_ege_by_students_id_html | safe }}
+        </div>
+      </div>
+
+  {% endif %}
+
+
+
+{% endblock %}

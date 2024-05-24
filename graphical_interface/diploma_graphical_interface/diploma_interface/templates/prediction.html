@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <head>
+    <title>Предсказание</title>
+  </head>
+  <h2 class="display-6">Предсказание</h2>
+  <div class="form-control">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="mb-2">
+        <h3 style="text-align: center;">Файл с обученной моделью</h3>
+        <input class="form-control" type="file" name="predictive_model_file" id="predictive_model_file" accept=".joblib" required>
+      </div>
+      <br>
+      <div class="row">
+        <h5>Диапазон годов, по которым будет идти предсказание</h5>
+        <div class="col-3 col-sm-3 col-sd-3 col-md-3 col-lg-2 col-xl-1">
+          <label>От</label>
+          <input class="form-control" style="width: auto;" type="number" min="2019" max="2023" name="year_from_predict" value="{{ year_from_predict | default:2023  }}" required />
+        </div>
+        <div class="col-2 col-sm-2 col-sd-2 col-md-2 col-lg-2" id="term_to_div">
+          <label>До</label>
+          <input class="form-control" style="width: auto;" type="number" min="2019" max="2023" name="year_to_predict" value="{{ year_to_predict | default:2023  }}" required />
+        </div>
+      </div>
+      <div> 
+        <button class="btn btn-primary" type="submit">Загрузить файл модели</button>
+      </div>
+
+    </form>
+  </div>
+  
+  <br>
+
+  {% if classification_quality_assessment_loaded %}
+    
+    <div class="form-control">
+      <h3 style="text-align: center;">Информации о загруженной модели, по которой проводился анализ</h3>
+
+      <div>
+        <strong>Высшая школа:</strong> {{ institutes_list_item_loaded }}</strong>
+
+        <br>
+
+        <strong>Диапазон годов:</strong> от {{ year_from_loaded }} до {{ year_to_loaded }}
+
+        <br>
+
+        {% if model_name_from_file_loaded == 'model1' or model_name_from_file_loaded == 'model3' %}
+          <strong>Семестр:</strong> {{ term_from_loaded }}
+        {% else %}
+          <strong>Диапазон семестров:</strong> от {{ term_from_loaded }} до {{ term_to_loaded }}
+        {% endif %}
+
+        <br>
+
+        {% if selected_subject_loaded %}
+        <strong>Предмет:</strong> {{ selected_subject_loaded }}
+        {% endif %}
+        {% if type_of_control_inner %}
+          <strong>Тип контроля:</strong>  {{ type_of_control_inner }}
+        {% endif %}
+
+        <br>
+        
+        <strong>Метрики обученной модели:</strong>
+        <br>
+        {{ classification_quality_assessment_loaded | linebreaksbr }}
+      </div>
+    </div>
+
+    <div class="form-control">
+      <h3 style="text-align: center;">Результаты предсказания</h3>
+      <div class="scrollable fixed-header-table">
+        {{ df_predictive_model_predict_html | safe }} 
+      </div>
+    </div>
+    <br>
+    <a href="data:text/csv;charset=utf-8,{{ df_predictive_model_predict_csv }}" download="Результаты предсказания.csv" class="btn btn-success btn-lg" style="width: 100%;">Сохранить результаты предсказания</a>
+
+  {% endif %}
+
+{% endblock %}

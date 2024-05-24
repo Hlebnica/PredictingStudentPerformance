@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+{% load static %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+    <style>
+      .fixed-header-table {
+          table-layout: fixed;
+          width: 100%;
+      }
+      
+      .fixed-header-table thead th {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background-color: #fff;
+      }
+      
+      .scrollable{
+          overflow-y: scroll; 
+          height:400px;
+      }
+      
+      td, th {
+          padding: 0;
+          vertical-align: center;
+          text-align: center;
+          line-height: 1;
+      }
+      
+      div{
+          margin-top: 20px;
+      }
+
+      input{
+        width: auto;
+      }
+      
+      select{
+          width: auto;
+      }
+      
+      .image-box{
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          display: block;
+          margin: 0 auto;
+      }
+    </style>
+
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" style="font-size: 20px;">
+    <a class="navbar-brand" style="font-size: 20px;">&nbsp;DigitalTrace</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" style="margin-top: 0px;" id="navbarNav">
+      <ul class="navbar-nav">
+        
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Извлечение данных
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item" href="{% url 'index' %}">Извлечение данных из «Электронного ЮУрГУ»</a>
+            <a class="dropdown-item" href="{% url 'import-csv' %}">Извлечение данных из файлов</a>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'analysis' %}">Анализ данных</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'predition_page' %}">Предсказание</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'info' %}">Информация о программе</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <h1>{% block header %}{% endblock header %}</h1>
+  
+  <div class="container"> 
+
+    {% block content %}
+    {% endblock content %}
+
+  </div>
+
+  <footer class="mt-4">
+
+  </footer>
+
+</body>
+</html>
