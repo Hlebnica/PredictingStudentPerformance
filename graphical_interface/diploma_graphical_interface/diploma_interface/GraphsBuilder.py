@@ -77,12 +77,18 @@ class GraphsBuilder:
         # Переименовывание столбцов
         ax.set_yticklabels([y_axis_labels.get(label, label) for label in feat_importances.nlargest(10).index])
         
+        # Увеличение размера текста подписей
+        plt.tick_params(axis='both', which='major', labelsize=14)
+        
+        # Увеличение размера текста подписей осей
+        plt.yticks(fontsize=14)
+        
         # Сохранение графика в файл
         plt.savefig('feature_importance_graph.png')
         
         # Преобразование графика в кодировку base64
         fig = plt.gcf()
-        plt.subplots_adjust(left=0.2)
+        plt.subplots_adjust(left=0.3)
         buffer = io.BytesIO()
         fig.savefig(buffer, format='png')
         buffer.seek(0)
@@ -104,7 +110,7 @@ class GraphsBuilder:
         Returns:
             plot_predictions_graph: график предсказаний и реальных значений
         """
-        figsize=(12,6)
+        figsize=(18,6)
         fig = plt.figure(figsize=figsize)
 
         # Построение гистограммы
@@ -116,6 +122,12 @@ class GraphsBuilder:
 
         plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
         plt.subplots_adjust(left=0.2, right=0.8)
+        
+        # Увеличение размера текста подписей
+        plt.tick_params(axis='both', which='major', labelsize=16)
+        
+        # Увеличение размера текста легенды
+        plt.legend(fontsize=16)
 
         # Сохранение графика в файл
         plt.savefig('plot_predictions_hist.png')
@@ -144,8 +156,11 @@ class GraphsBuilder:
         
         # Построение графика матрицы ошибок
         sns.heatmap(cm, annot=True, fmt='d', ax=ax, xticklabels=self.clf.classes_, yticklabels=self.clf.classes_)
-        plt.xlabel('Предсказанные классы')
-        plt.ylabel('Истинные классы')
+        plt.xlabel('Предсказанные классы', fontsize=16)
+        plt.ylabel('Истинные классы', fontsize=16)
+        
+        # Увеличение размера текста подписей
+        plt.tick_params(axis='both', which='major', labelsize=14)
         
         # Сохранение графика в файл
         plt.savefig('confusion_matrix.png')

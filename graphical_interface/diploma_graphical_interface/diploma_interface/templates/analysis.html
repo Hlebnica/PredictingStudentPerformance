@@ -3,21 +3,51 @@
 
 {% block content %}
   <head>
-    <title>Анализ данных</title>
+    <title>Обучение моделей предсказания</title>
+    <style>
+        #loading-message {
+            color: red;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 1000;
+            animation: blink 1s infinite;
+        }
+    
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+    
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            z-index: 999;
+        }
+    </style>
   </head>
-  <h2 class="display-6">Анализ данных</h2>
+  <h2 class="display-6">Обучение моделей предсказания</h2>
 
   <div>
     <form method="POST">
       {% csrf_token %}
-        <div class="form-control">
+        <div class="form-control" onsubmit="return validateForm()">
             <h3>Модель данных</h3>
             <div style="margin: 0">
                 <select class="form-select" style="width: auto; max-width: 100%;" id="predictive_model" name="predictive_model">
                     <option value="model1" {% if predictive_model == 'model1' %}selected{% endif %}>Предсказание оценки дисциплины за указанный семестр</option>
                     <option value="model2" {% if predictive_model == 'model2' %}selected{% endif %}>Предсказание оценки дисциплины, проходящей в указанном диапазоне семестров</option>
-                    <option value="model3" {% if predictive_model == 'model3' %}selected{% endif %}>Предсказание успеваемости прохождения практик</option>
-                    <option value="model4" {% if predictive_model == 'model4' %}selected{% endif %}>Предсказания вероятности отчисления по экзаменам/зачетам</option>
+                    <option value="model3" {% if predictive_model == 'model3' %}selected{% endif %}>Предсказание оценки по практикам</option>
+                    <option value="model4" {% if predictive_model == 'model4' %}selected{% endif %}>Предсказание отчисления студентов по экзаменам/зачетам</option>
                     <option value="model5" {% if predictive_model == 'model5' %}selected{% endif %}>Предсказание успеваемости на основе рейтинга по экзаменам/зачетам</option>
                     <option value="model6" {% if predictive_model == 'model6' %}selected{% endif %}>Предсказание успеваемости при завершении обучения</option>
                 </select>
@@ -40,7 +70,7 @@
                 
                 <div id="subject_div">
                     <h4>Предмет</h4>
-                    <select id="subjects_in_term_intersection" name="subjects_in_term_intersection" class="form-select" style="width: auto; max-width: 100%;">
+                    <select id="subjects_in_term_intersection" name="subjects_in_term_intersection" class="form-select" style="width: auto; max-width: 100%;" required>
                     </select>
                 </div>
             </div>
@@ -68,7 +98,7 @@
                     <ul>
                         <li>Случайный лес</li>
                         <p style="word-wrap: break-word; width: 900px;">
-                            Случайный лес (классификатор) - Алгоритм случайного леса состоит из ансамбля решающих деревьев, которые 
+                            Случайный лес - Алгоритм случайного леса состоит из ансамбля решающих деревьев, которые 
                             обучаются независимо друг от друга на случайных подвыборках данных и случайных подмножествах признаков. 
                             При классификации, для определения класса объекта, случайный лес использует голосование 
                             большинства среди всех деревьев.
@@ -76,7 +106,7 @@
 
                         <li>Градиентный бустинг</li>
                         <p style="word-wrap: break-word; width: 900px;">
-                            Градиентный бустинг (классификатор) - Градиентный бустинг состоит из итеративного обучения небольших 
+                            Градиентный бустинг - Градиентный бустинг состоит из итеративного обучения небольших 
                             решающих деревьев, при котором каждое новое дерево учится исправлять ошибки предыдущих деревьев. 
                             При классификации, градиентный бустинг использует взвешенное голосование деревьев.
                         </p>
@@ -204,6 +234,15 @@
         </div>
     </form>
 
+    {% if messages %}
+        <br>
+        <ul class="messages alert alert-warning list-inline">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     {% if results_df %}
         
         <div class="form-control">
@@ -283,6 +322,7 @@
                         var selected = (localStorage.getItem('selectedSubject') == value) ? 'selected' : '';
                         select.append($('<option ' + selected + '></option>').attr('value', value).text(value));
                     });
+                    validateForm();
                 }
             });
         }
@@ -340,5 +380,57 @@
         toggleFields();
     </script>
 
+    <script>
+        function validateForm() {
+            var term_from = document.getElementById("term_from");
+            var term_to = document.getElementById("term_to");
+        
+            var isValid = true;
+        
+            if (parseInt(term_from.value) > parseInt(term_to.value)) {
+                term_from.setCustomValidity("Значение 'От' в диапазоне учебных курсов должно быть меньше или равно значению 'До'.");
+                isValid = false;
+            } else {
+                term_from.setCustomValidity("");
+            }
+
+            term_from.reportValidity();
+            term_to.reportValidity();
+        
+            return isValid;
+        }
+        
+        document.getElementById("term_from").addEventListener("input", function() {
+            this.setCustomValidity("");
+            this.reportValidity();
+        });
+        
+        document.getElementById("term_to").addEventListener("input", function() {
+            document.getElementById("term_from").setCustomValidity("");
+            document.getElementById("term_from").reportValidity();
+        });
+    </script>
+
+    <script>
+        function handleSubmit() {
+            var submitButton = document.getElementById("myButton");
+            submitButton.disabled = true;
+            submitButton.innerHTML = "Запрос выполняется...";
+    
+            var loadingOverlay = document.createElement("div");
+            loadingOverlay.id = "loading-overlay";
+    
+            var loadingMessage = document.createElement("div");
+            loadingMessage.id = "loading-message";
+            loadingMessage.innerHTML = "Пожалуйста, подождите, запрос выполняется...";
+    
+            loadingOverlay.appendChild(loadingMessage);
+            document.body.appendChild(loadingOverlay);
+    
+            return true;
+        }
+    
+        document.querySelector('form').onsubmit = handleSubmit;
+    </script>
 
 {% endblock %}

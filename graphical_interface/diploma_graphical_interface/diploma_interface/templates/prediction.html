@@ -2,84 +2,171 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-  <head>
-    <title>Предсказание</title>
-  </head>
-  <h2 class="display-6">Предсказание</h2>
-  <div class="form-control">
-    <form method="POST" enctype="multipart/form-data">
-      {% csrf_token %}
-      <div style="mb-2">
-        <h3 style="text-align: center;">Файл с обученной моделью</h3>
-        <input class="form-control" type="file" name="predictive_model_file" id="predictive_model_file" accept=".joblib" required>
-      </div>
-      <br>
-      <div class="row">
-        <h5>Диапазон годов, по которым будет идти предсказание</h5>
-        <div class="col-3 col-sm-3 col-sd-3 col-md-3 col-lg-2 col-xl-1">
-          <label>От</label>
-          <input class="form-control" style="width: auto;" type="number" min="2019" max="2023" name="year_from_predict" value="{{ year_from_predict | default:2023  }}" required />
-        </div>
-        <div class="col-2 col-sm-2 col-sd-2 col-md-2 col-lg-2" id="term_to_div">
-          <label>До</label>
-          <input class="form-control" style="width: auto;" type="number" min="2019" max="2023" name="year_to_predict" value="{{ year_to_predict | default:2023  }}" required />
-        </div>
-      </div>
-      <div> 
-        <button class="btn btn-primary" type="submit">Загрузить файл модели</button>
-      </div>
+<head>
+  <title>Предсказание</title>
+  <style>
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-    </form>
-  </div>
-  
-  <br>
+    #loading-message {
+      color: red;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      animation: blink 1s infinite;
+    }
 
-  {% if classification_quality_assessment_loaded %}
-    
-    <div class="form-control">
-      <h3 style="text-align: center;">Информации о загруженной модели, по которой проводился анализ</h3>
-
-      <div>
-        <strong>Высшая школа:</strong> {{ institutes_list_item_loaded }}</strong>
-
-        <br>
-
-        <strong>Диапазон годов:</strong> от {{ year_from_loaded }} до {{ year_to_loaded }}
-
-        <br>
-
-        {% if model_name_from_file_loaded == 'model1' or model_name_from_file_loaded == 'model3' %}
-          <strong>Семестр:</strong> {{ term_from_loaded }}
-        {% else %}
-          <strong>Диапазон семестров:</strong> от {{ term_from_loaded }} до {{ term_to_loaded }}
-        {% endif %}
-
-        <br>
-
-        {% if selected_subject_loaded %}
-        <strong>Предмет:</strong> {{ selected_subject_loaded }}
-        {% endif %}
-        {% if type_of_control_inner %}
-          <strong>Тип контроля:</strong>  {{ type_of_control_inner }}
-        {% endif %}
-
-        <br>
-        
-        <strong>Метрики обученной модели:</strong>
-        <br>
-        {{ classification_quality_assessment_loaded | linebreaksbr }}
-      </div>
-    </div>
-
-    <div class="form-control">
-      <h3 style="text-align: center;">Результаты предсказания</h3>
-      <div class="scrollable fixed-header-table">
-        {{ df_predictive_model_predict_html | safe }} 
-      </div>
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<h2 class="display-6">Предсказание</h2>
+<div class="form-control">
+  <form method="POST" enctype="multipart/form-data" onsubmit="return handleSubmit()">
+    {% csrf_token %}
+    <div style="mb-2">
+      <h3 style="text-align: center;">Файл с обученной моделью</h3>
+      <input class="form-control" type="file" name="predictive_model_file" id="predictive_model_file" accept=".joblib" required>
     </div>
     <br>
-    <a href="data:text/csv;charset=utf-8,{{ df_predictive_model_predict_csv }}" download="Результаты предсказания.csv" class="btn btn-success btn-lg" style="width: 100%;">Сохранить результаты предсказания</a>
+    <div class="row">
+      <h5>Диапазон годов, по которым будет идти предсказание</h5>
+      <div class="col-3 col-sm-3 col-sd-3 col-md-3 col-lg-2 col-xl-1">
+        <label>От</label>
+        <input class="form-control" style="width: auto;" type="number" min="2019" max="2023" name="year_from_predict" id="year_from_predict" value="{{ year_from_predict | default:2023 }}" required />
+      </div>
+      <div class="col-2 col-sm-2 col-sd-2 col-md-2 col-lg-2" id="term_to_div">
+        <label>До</label>
+        <input class="form-control" style="width: auto;" type="number" min="2019" max="2023" name="year_to_predict" id="year_to_predict" value="{{ year_to_predict | default:2023 }}" required />
+      </div>
+    </div>
+    <div>
+      <button class="btn btn-primary" type="submit" id="submit-button">Загрузить файл модели</button>
+    </div>
+  </form>
+</div>
 
-  {% endif %}
+{% if messages %}
+<br>
+<ul class="messages alert alert-warning list-inline">
+  {% for message in messages %}
+  <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<br>
+
+{% if classification_quality_assessment_loaded %}
+
+<div class="form-control">
+  <h3 style="text-align: center;">Информации о загруженной модели, по которой проводился анализ</h3>
+
+  <div>
+    <strong>Высшая школа:</strong> {{ institutes_list_item_loaded }}</strong>
+
+    <br>
+
+    <strong>Диапазон годов:</strong> от {{ year_from_loaded }} до {{ year_to_loaded }}
+
+    <br>
+
+    {% if model_name_from_file_loaded == 'model1' or model_name_from_file_loaded == 'model3' %}
+    <strong>Семестр:</strong> {{ term_from_loaded }}
+    {% else %}
+    <strong>Диапазон семестров:</strong> от {{ term_from_loaded }} до {{ term_to_loaded }}
+    {% endif %}
+
+    <br>
+
+    {% if selected_subject_loaded %}
+    <strong>Предмет:</strong> {{ selected_subject_loaded }}
+    {% endif %}
+    {% if type_of_control_inner %}
+    <strong>Тип контроля:</strong> {{ type_of_control_inner }}
+    {% endif %}
+
+    <br>
+
+    <strong>Метрики обученной модели:</strong>
+    <br>
+    {{ classification_quality_assessment_loaded | linebreaksbr }}
+  </div>
+</div>
+
+<div class="form-control">
+  <h3 style="text-align: center;">Результаты предсказания</h3>
+  <div class="scrollable fixed-header-table">
+    {{ df_predictive_model_predict_html | safe }}
+  </div>
+</div>
+<br>
+<a href="data:text/csv;charset=utf-8,{{ df_predictive_model_predict_csv }}" download="Результаты предсказания.csv" class="btn btn-success btn-lg" style="width: 100%;">Сохранить результаты предсказания</a>
+
+{% endif %}
+
+<div id="loading-overlay" style="display: none;">
+  <div id="loading-message">Пожалуйста, подождите, запрос выполняется...</div>
+</div>
+
+<script>
+  function validatePredictForm() {
+    var yearFromPredict = document.getElementById("year_from_predict");
+    var yearToPredict = document.getElementById("year_to_predict");
+
+    var isValid = true;
+
+    if (parseInt(yearFromPredict.value) > parseInt(yearToPredict.value)) {
+      yearFromPredict.setCustomValidity("Значение 'От' в диапазоне годов должно быть меньше или равно значению 'До'.");
+      isValid = false;
+    } else {
+      yearFromPredict.setCustomValidity("");
+    }
+
+    yearFromPredict.reportValidity();
+    yearToPredict.reportValidity();
+
+    return isValid;
+  }
+
+  document.getElementById("year_from_predict").addEventListener("input", function() {
+    this.setCustomValidity("");
+    this.reportValidity();
+  });
+
+  document.getElementById("year_to_predict").addEventListener("input", function() {
+    document.getElementById("year_from_predict").setCustomValidity("");
+    document.getElementById("year_from_predict").reportValidity();
+  });
+
+  function handleSubmit() {
+    if (validatePredictForm()) {
+      var submitButton = document.getElementById("submit-button");
+      submitButton.disabled = true;
+      submitButton.innerHTML = "Запрос выполняется...";
+
+      // Show loading overlay
+      var loadingOverlay = document.getElementById("loading-overlay");
+      loadingOverlay.style.display = "flex";
+
+      return true; // Allow form submission
+    } else {
+      return false;
+    }
+  }
+</script>
 
 {% endblock %}

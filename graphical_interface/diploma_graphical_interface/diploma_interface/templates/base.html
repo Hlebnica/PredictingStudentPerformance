@@ -20,6 +20,15 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
 
     <style>
+      {% comment %} TODO Для скриншотов {% endcomment %}
+      {% comment %} div {
+        font-size: 25px;
+      }
+
+      input, select, button {
+        font-size: 25px !important;
+      } {% endcomment %}
+
       .fixed-header-table {
           table-layout: fixed;
           width: 100%;
@@ -85,7 +94,7 @@
           </div>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'analysis' %}">Анализ данных</a>
+          <a class="nav-link" href="{% url 'analysis' %}">Обучение моделей предсказания</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'predition_page' %}">Предсказание</a>
